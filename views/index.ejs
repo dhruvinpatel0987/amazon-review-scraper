@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Amazon Review Scraper</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container-fluid p-5 bg-primary text-white text-center">
+        <h1>Amazon Review Scraper</h1>
+    </div>
+
+    <div class="container mt-3">
+        <h2>Reveiw Scraping Request</h2>
+        <div class="d-flex p-2 justify-content-between">
+            <p style="font-size: 18px;">List of review scraping request:</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">Add
+                Request</button>
+        </div>
+        <div>
+
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <!-- <th>Index</th> -->
+                        <th scope="col">ID</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Source URL</th>
+                        <th scope="col">Time</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="t-data">
+                    <% data.forEach(function(req){ %>
+                        <tr>
+                            <!-- <td>1</td> -->
+                            <td><%= req.request_id %></td>
+                            <td><%= req.status %></td>
+                            <td><%= req.source_url %></td>
+                            <td><%= req.timestamp %></td>
+                            <td>
+                                <a href="<%= baseUrl %>/crawl-request/<%= req.request_id %>" class="btn btn-primary"><i class="far fa-eye"></i></a>
+                            </td>
+                        </tr>
+                    <% }); %>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal" id="myModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Scraping request</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <input type="text" id="url" class="form-control" placeholder="Add Amazon URL">
+                </div>
+
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="submit-btn" class="btn btn-primary">Submit</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"
+        integrity="sha512-emSwuKiMyYedRwflbZB2ghzX8Cw8fmNVgZ6yQNNXXagFzFOaQmbvQ1vmDkddHjm5AITcBIZfC7k4ShQSjgPAmQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        $(document).ready(function () {
+
+            // Attach Button click event listener 
+            $("#submit-btn").click(function () {
+                let url = $('#url').val();
+                let customDate = (date) => {
+                    let timestamp = new Date(date);
+                    return `${timestamp.getDay()}/${timestamp.getMonth() + 1}/${timestamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}:${timestamp.getSeconds()}`
+                }
+                if (url) {
+                    axios({
+                        method: 'post',
+                        url: '<%= baseUrl %>/crawl-request/create',
+                        data: {
+                            url
+                        }
+                    }).then(function (res) {
+                        console.log(res.status);
+                        console.log(res.data);
+                        let html = `<tr>
+                            <td>${res.data?.data?.requestId}</td>
+                            <td>${res.data?.data?.status}</td>
+                            <td>${res.data?.data?.source_url}</td>
+                            <td>${customDate(res.data?.data?.timestamp)}</td>
+                            <td>
+                                <a href="<%= baseUrl %>/crawl-request/${res.data?.data?.requestId}" class="btn btn-primary"><i class="far fa-eye"></i></a>
+                            </td>
+                        </tr >`
+                        $('#t-data').prepend(html);
+                    }).catch(err => console.error(err));
+                }
+
+                // show Modal
+                $('#myModal').modal('hide');
+            });
+        });
+    </script>
+</body>
+</html>
